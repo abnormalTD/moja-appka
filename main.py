@@ -33,22 +33,22 @@ class StahovacLayout(BoxLayout):
         self.github_apk_url = "https://github.com/abnormalTD/moja-appka/releases"
 
         self.stavovy_text = Label(
-            text=f"YouTube MP3 Sťahovač v{self.aktualna_verzia}\n(Podporuje playlisty a vlastné priečinky)", 
-            font_size=18, size_hint=(1, 0.2), halign="center"
+            text=f"YouTube MP3 Sťahovač v{self.aktualna_verzia}\n(Podporuje playlisty a vlastné priečinky)",
+            font_size=22, size_hint=(1, 0.2), halign="center"
         )
         self.add_widget(self.stavovy_text)
 
-        self.folder_input = TextInput(hint_text="Voliteľné: Názov vlastného priečinka...", multiline=False, size_hint=(1, 0.15))
+        self.folder_input = TextInput(hint_text="Voliteľné: Názov vlastného priečinka...", font_size=20, multiline=False, size_hint=(1, 0.15))
         self.add_widget(self.folder_input)
 
-        self.link_input = TextInput(hint_text="https://www.youtube.com/...", multiline=False, size_hint=(1, 0.15))
+        self.link_input = TextInput(hint_text="https://www.youtube.com/...", font_size=20, multiline=False, size_hint=(1, 0.15))
         self.add_widget(self.link_input)
 
-        self.stiahnut_btn = Button(text="STIAHNUŤ MP3", font_size=25, background_color=(0.1, 0.5, 0.8, 1), size_hint=(1, 0.2))
+        self.stiahnut_btn = Button(text="STIAHNUŤ MP3", font_size=28, background_color=(0.1, 0.5, 0.8, 1), size_hint=(1, 0.2))
         self.stiahnut_btn.bind(on_press=self.spust_stahovanie_vlakno)
         self.add_widget(self.stiahnut_btn)
 
-        self.update_btn = Button(text="DOSTUPNÁ AKTUALIZÁCIA!", font_size=20, background_color=(0.9, 0.1, 0.1, 1), size_hint=(1, 0), disabled=True)
+        self.update_btn = Button(text="DOSTUPNÁ AKTUALIZÁCIA!", font_size=24, background_color=(0.9, 0.1, 0.1, 1), size_hint=(1, 0), disabled=True)
         self.update_btn.bind(on_press=self.otvor_github)
         self.add_widget(self.update_btn)
 
