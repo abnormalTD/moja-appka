@@ -6,9 +6,11 @@ from kivy.uix.boxlayout import BoxLayout
 from kivy.uix.textinput import TextInput
 from kivy.uix.button import Button
 from kivy.uix.label import Label
+from kivy.uix.switch import Switch
 from kivy.utils import platform
 from kivy.clock import mainthread, Clock
 from kivy.network.urlrequest import UrlRequest
+from kivy.metrics import sp
 import yt_dlp
 
 class MyLogger:
@@ -23,7 +25,7 @@ class StahovacLayout(BoxLayout):
         self.orientation = 'vertical'
         self.padding = 20
         self.spacing = 15
-        self.aktualna_verzia = "1.0.0"
+        self.aktualna_verzia = "1.1.0"
         
         # Premenné pre animáciu konverzie
         self.animacia_event = None
@@ -34,21 +36,29 @@ class StahovacLayout(BoxLayout):
 
         self.stavovy_text = Label(
             text=f"YouTube MP3 Sťahovač v{self.aktualna_verzia}\n(Podporuje playlisty a vlastné priečinky)",
-            font_size=22, size_hint=(1, 0.2), halign="center"
+            font_size=sp(22), size_hint=(1, 0.2), halign="center"
         )
         self.add_widget(self.stavovy_text)
 
-        self.folder_input = TextInput(hint_text="Voliteľné: Názov vlastného priečinka...", font_size=20, multiline=False, size_hint=(1, 0.15))
+        self.folder_input = TextInput(hint_text="Voliteľné: Názov vlastného priečinka...", font_size=sp(20), multiline=False, size_hint=(1, 0.15))
         self.add_widget(self.folder_input)
 
-        self.link_input = TextInput(hint_text="https://www.youtube.com/...", font_size=20, multiline=False, size_hint=(1, 0.15))
+        self.link_input = TextInput(hint_text="https://www.youtube.com/...", font_size=sp(20), multiline=False, size_hint=(1, 0.15))
         self.add_widget(self.link_input)
 
-        self.stiahnut_btn = Button(text="STIAHNUŤ MP3", font_size=28, background_color=(0.1, 0.5, 0.8, 1), size_hint=(1, 0.2))
+        self.cislovanie_riadok = BoxLayout(orientation='horizontal', size_hint=(1, 0.12))
+        self.cislovanie_label = Label(text="Číslovať skladby v playliste", font_size=sp(18), halign="left", valign="middle")
+        self.cislovanie_label.bind(size=lambda inst, val: setattr(inst, 'text_size', val))
+        self.cislovanie_switch = Switch(active=False, size_hint=(0.3, 1))
+        self.cislovanie_riadok.add_widget(self.cislovanie_label)
+        self.cislovanie_riadok.add_widget(self.cislovanie_switch)
+        self.add_widget(self.cislovanie_riadok)
+
+        self.stiahnut_btn = Button(text="STIAHNUŤ MP3", font_size=sp(28), background_color=(0.1, 0.5, 0.8, 1), size_hint=(1, 0.2))
         self.stiahnut_btn.bind(on_press=self.spust_stahovanie_vlakno)
         self.add_widget(self.stiahnut_btn)
 
-        self.update_btn = Button(text="DOSTUPNÁ AKTUALIZÁCIA!", font_size=24, background_color=(0.9, 0.1, 0.1, 1), size_hint=(1, 0), disabled=True)
+        self.update_btn = Button(text="DOSTUPNÁ AKTUALIZÁCIA!", font_size=sp(24), background_color=(0.9, 0.1, 0.1, 1), size_hint=(1, 0), disabled=True)
         self.update_btn.bind(on_press=self.otvor_github)
         self.add_widget(self.update_btn)
 
@@ -134,17 +144,18 @@ class StahovacLayout(BoxLayout):
     def spust_stahovanie_vlakno(self, instance):
         url = self.link_input.text.strip()
         vlastny_priecinok = self.folder_input.text.strip()
-        
+        cislovat = self.cislovanie_switch.active
+
         if not url:
             self.aktualizuj_status("Najprv vlož link!")
             return
 
         self.stiahnut_btn.disabled = True
         self.aktualizuj_status("Pripravujem sťahovanie...")
-        
-        threading.Thread(target=self._stiahni_mp3_v_pozadi, args=(url, vlastny_priecinok), daemon=True).start()
 
-    def _stiahni_mp3_v_pozadi(self, url, vlastny_priecinok):
+        threading.Thread(target=self._stiahni_mp3_v_pozadi, args=(url, vlastny_priecinok, cislovat), daemon=True).start()
+
+    def _stiahni_mp3_v_pozadi(self, url, vlastny_priecinok, cislovat):
         try:
             if "&" in url and "list=" not in url:
                 url = url.split("&")[0]
@@ -155,13 +166,19 @@ class StahovacLayout(BoxLayout):
             else:
                 dir_path = "."
 
-            if vlastny_priecinok:
-                final_path = os.path.join(dir_path, vlastny_priecinok, '%(title)s.%(ext)s')
+            je_playlist = "list=" in url
+            if je_playlist and cislovat:
+                nazov_suboru = '%(playlist_index)02d - %(title)s.%(ext)s'
             else:
-                if "list=" in url:
-                    final_path = os.path.join(dir_path, '%(playlist_title)s', '%(title)s.%(ext)s')
+                nazov_suboru = '%(title)s.%(ext)s'
+
+            if vlastny_priecinok:
+                final_path = os.path.join(dir_path, vlastny_priecinok, nazov_suboru)
+            else:
+                if je_playlist:
+                    final_path = os.path.join(dir_path, '%(playlist_title)s', nazov_suboru)
                 else:
-                    final_path = os.path.join(dir_path, '%(title)s.%(ext)s')
+                    final_path = os.path.join(dir_path, nazov_suboru)
 
             ydl_opts = {
                 'format': 'bestaudio/best',
