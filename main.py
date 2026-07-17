@@ -31,7 +31,7 @@ class StahovacLayout(BoxLayout):
         self.animacia_event = None
         self.konverzia_bodky = 0
         
-        self.github_verzia_url = "https://raw.githubusercontent.com/abnormalTD/moja-appka/main/version.txt"
+        self.github_verzia_url = "https://raw.githubusercontent.com/abnormalTD/moja-appka/master/version.txt"
         self.github_apk_url = "https://github.com/abnormalTD/moja-appka/releases"
 
         self.stavovy_text = Label(
