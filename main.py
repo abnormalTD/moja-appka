@@ -25,7 +25,7 @@ class StahovacLayout(BoxLayout):
         self.orientation = 'vertical'
         self.padding = 20
         self.spacing = 15
-        self.aktualna_verzia = "1.1.0"
+        self.aktualna_verzia = "1.1.1"
         
         # Premenné pre animáciu konverzie
         self.animacia_event = None
@@ -36,8 +36,9 @@ class StahovacLayout(BoxLayout):
 
         self.stavovy_text = Label(
             text=f"YouTube MP3 Sťahovač v{self.aktualna_verzia}\n(Podporuje playlisty a vlastné priečinky)",
-            font_size=sp(22), size_hint=(1, 0.2), halign="center"
+            font_size=sp(22), size_hint=(1, 0.2), halign="center", valign="middle"
         )
+        self.stavovy_text.bind(size=lambda inst, val: setattr(inst, 'text_size', val))
         self.add_widget(self.stavovy_text)
 
         self.folder_input = TextInput(hint_text="Voliteľné: Názov vlastného priečinka...", font_size=sp(20), multiline=False, size_hint=(1, 0.15))
@@ -198,10 +199,15 @@ class StahovacLayout(BoxLayout):
                 from jnius import autoclass  # type: ignore
                 PythonActivity = autoclass('org.kivy.android.PythonActivity')
                 native_lib_dir = PythonActivity.mActivity.getApplicationInfo().nativeLibraryDir
+                ffmpeg_path = os.path.join(native_lib_dir, 'libffmpegbin.so')
+                # Without this, the dynamic linker can't find libffmpegbin.so's
+                # sibling dependencies (libshine.so, libavcodec.so, ...) when it's
+                # exec'd as a subprocess instead of dlopen'd by the app itself
+                os.environ['LD_LIBRARY_PATH'] = native_lib_dir
                 # Android ffmpeg build has libshine (MP3 encoder), not libmp3lame which yt-dlp requests by default
                 import yt_dlp.postprocessor.ffmpeg as ffmpeg_pp
                 ffmpeg_pp.ACODECS['mp3'] = ('mp3', 'libshine', ())
-                ydl_opts['ffmpeg_location'] = os.path.join(native_lib_dir, 'libffmpegbin.so')
+                ydl_opts['ffmpeg_location'] = ffmpeg_path
 
             with yt_dlp.YoutubeDL(ydl_opts) as ydl:
                 ydl.download([url])
