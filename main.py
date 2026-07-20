@@ -157,6 +157,7 @@ class StahovacLayout(BoxLayout):
         threading.Thread(target=self._stiahni_mp3_v_pozadi, args=(url, vlastny_priecinok, cislovat), daemon=True).start()
 
     def _stiahni_mp3_v_pozadi(self, url, vlastny_priecinok, cislovat):
+        ffmpeg_debug = ""
         try:
             if "&" in url and "list=" not in url:
                 url = url.split("&")[0]
@@ -204,6 +205,11 @@ class StahovacLayout(BoxLayout):
                 # sibling dependencies (libshine.so, libavcodec.so, ...) when it's
                 # exec'd as a subprocess instead of dlopen'd by the app itself
                 os.environ['LD_LIBRARY_PATH'] = native_lib_dir
+                ffmpeg_debug = (
+                    f"lib_dir={native_lib_dir} | "
+                    f"existuje={os.path.exists(ffmpeg_path)} | "
+                    f"LD_LIBRARY_PATH={os.environ.get('LD_LIBRARY_PATH')}"
+                )
                 # Android ffmpeg build has libshine (MP3 encoder), not libmp3lame which yt-dlp requests by default
                 import yt_dlp.postprocessor.ffmpeg as ffmpeg_pp
                 ffmpeg_pp.ACODECS['mp3'] = ('mp3', 'libshine', ())
@@ -218,7 +224,10 @@ class StahovacLayout(BoxLayout):
             
         except Exception as e:
             self.zastav_animaciu() # Pre istotu vypneme bodky aj pri chybe
-            self.aktualizuj_status(f"Chyba: {str(e)}")
+            sprava = f"Chyba: {str(e)}"
+            if ffmpeg_debug:
+                sprava += f"\n{ffmpeg_debug}"
+            self.aktualizuj_status(sprava)
         finally:
             self.odomkni_tlacidlo()
 
