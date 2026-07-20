@@ -36,9 +36,10 @@ class StahovacLayout(BoxLayout):
 
         self.stavovy_text = Label(
             text=f"YouTube MP3 Sťahovač v{self.aktualna_verzia}\n(Podporuje playlisty a vlastné priečinky)",
-            font_size=sp(22), size_hint=(1, 0.2), halign="center", valign="middle"
+            font_size=sp(22), size_hint=(1, None), halign="center", valign="middle"
         )
-        self.stavovy_text.bind(size=lambda inst, val: setattr(inst, 'text_size', val))
+        self.stavovy_text.bind(width=lambda inst, val: setattr(inst, 'text_size', (val, None)))
+        self.stavovy_text.bind(texture_size=lambda inst, val: setattr(inst, 'height', max(val[1], sp(60))))
         self.add_widget(self.stavovy_text)
 
         self.folder_input = TextInput(hint_text="Voliteľné: Názov vlastného priečinka...", font_size=sp(20), multiline=False, size_hint=(1, 0.15))
