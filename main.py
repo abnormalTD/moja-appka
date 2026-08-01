@@ -1,4 +1,5 @@
 import os
+import subprocess
 import threading
 import webbrowser
 from kivy.app import App
@@ -211,6 +212,15 @@ class StahovacLayout(BoxLayout):
                     f"existuje={os.path.exists(ffmpeg_path)} | "
                     f"LD_LIBRARY_PATH={os.environ.get('LD_LIBRARY_PATH')}"
                 )
+                try:
+                    test_vysledok = subprocess.run(
+                        [ffmpeg_path, '-version'],
+                        capture_output=True, text=True, timeout=10
+                    )
+                    test_vystup = (test_vysledok.stdout or test_vysledok.stderr or "").strip()[:400]
+                    ffmpeg_debug += f" || test_kod={test_vysledok.returncode} test_vystup={test_vystup}"
+                except Exception as test_e:
+                    ffmpeg_debug += f" || test_zlyhal={type(test_e).__name__}: {test_e}"
                 # Android ffmpeg build has libshine (MP3 encoder), not libmp3lame which yt-dlp requests by default
                 import yt_dlp.postprocessor.ffmpeg as ffmpeg_pp
                 ffmpeg_pp.ACODECS['mp3'] = ('mp3', 'libshine', ())
@@ -229,6 +239,14 @@ class StahovacLayout(BoxLayout):
             if ffmpeg_debug:
                 sprava += f"\n{ffmpeg_debug}"
             self.aktualizuj_status(sprava)
+            if platform == 'android':
+                try:
+                    from android.storage import primary_external_storage_path  # type: ignore
+                    log_path = os.path.join(primary_external_storage_path(), 'Download', 'moja_apka_debug.txt')
+                    with open(log_path, 'w', encoding='utf-8') as f:
+                        f.write(sprava)
+                except Exception:
+                    pass
         finally:
             self.odomkni_tlacidlo()
 
