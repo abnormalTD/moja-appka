@@ -205,7 +205,9 @@ class StahovacLayout(BoxLayout):
                 ffmpeg_path = os.path.join(native_lib_dir, 'libffmpegbin.so')
                 # Without this, the dynamic linker can't find libffmpegbin.so's
                 # sibling dependencies (libshine.so, libavcodec.so, ...) when it's
-                # exec'd as a subprocess instead of dlopen'd by the app itself
+                # exec'd as a subprocess instead of dlopen'd by the app itself.
+                # (The $ORIGIN-rpath attempt to avoid this got corrupted going
+                # through make's own $-expansion - reverted, needs revisiting.)
                 os.environ['LD_LIBRARY_PATH'] = native_lib_dir
                 ffmpeg_debug = (
                     f"lib_dir={native_lib_dir} | "
