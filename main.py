@@ -30,7 +30,7 @@ class StahovacLayout(BoxLayout):
         self.orientation = 'vertical'
         self.padding = 20
         self.spacing = 15
-        self.aktualna_verzia = "1.2.0"
+        self.aktualna_verzia = "1.2.1"
         
         # Premenné pre animáciu konverzie
         self.animacia_event = None
