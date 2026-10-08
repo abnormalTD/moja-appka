@@ -30,7 +30,7 @@ class StahovacLayout(BoxLayout):
         self.orientation = 'vertical'
         self.padding = 20
         self.spacing = 15
-        self.aktualna_verzia = "1.2.1"
+        self.aktualna_verzia = "1.2.2"
         
         # Premenné pre animáciu konverzie
         self.animacia_event = None
@@ -209,6 +209,30 @@ class StahovacLayout(BoxLayout):
     def my_hook(self, d):
         self.aktualizuj_progress(d)
 
+    def oznam_media_scanneru(self, cesta):
+        # Android nezaradí nový súbor do MediaStore (odkiaľ čerpajú hudobné
+        # a video prehrávače) hneď po zápise - bez tohto je súbor v úložisku,
+        # ale v prehrávači neviditeľný, kým ho niečo iné (napr. premenovanie
+        # cez správcu súborov) nespustí sken.
+        #
+        # Volá sa z yt-dlp options ako 'post_hooks' - NIE
+        # 'postprocessor_hooks': tie sa volajú po každom jednom postprocesore,
+        # teda ešte PRED presunom súboru na finálne miesto, takže by sme
+        # Androidu nahlásili dočasnú cestu a v MediaStore by ostal záznam
+        # o neexistujúcom súbore. 'post_hooks' beží ako posledný krok pre
+        # každý súbor a dostane už finálnu cestu.
+        if platform != 'android' or not cesta or not os.path.exists(cesta):
+            return
+        try:
+            from jnius import autoclass  # type: ignore
+            MediaScannerConnection = autoclass('android.media.MediaScannerConnection')
+            PythonActivity = autoclass('org.kivy.android.PythonActivity')
+            MediaScannerConnection.scanFile(PythonActivity.mActivity, [cesta], None, None)
+        except Exception:
+            # yt-dlp pri výnimke v post_hooks preruší celé sťahovanie,
+            # a neúspešný sken nie je dôvod zahodiť stiahnutý súbor.
+            pass
+
     def aktualizuj_text_tlacidla(self, instance, hodnota):
         self.stiahnut_btn.text = "STIAHNUŤ VIDEO" if hodnota else "STIAHNUŤ MP3"
         for prvok in (self.kvalita_btn, self.kvalita_spinner):
@@ -320,6 +344,7 @@ class StahovacLayout(BoxLayout):
                     'noplaylist': False,
                     'logger': MyLogger(),
                     'progress_hooks': [self.my_hook],
+                    'post_hooks': [self.oznam_media_scanneru],
                     'js_runtimes': {'node': {}},
                 }
             else:
@@ -329,6 +354,7 @@ class StahovacLayout(BoxLayout):
                     'noplaylist': False,
                     'logger': MyLogger(),
                     'progress_hooks': [self.my_hook],
+                    'post_hooks': [self.oznam_media_scanneru],
                     'js_runtimes': {'node': {}},
                     'postprocessors': [{
                         'key': 'FFmpegExtractAudio',
