@@ -1,5 +1,9 @@
 # YouTube MP3 Downloader
 
+> **Táto appka bola nahradená appkou [Kópia](https://github.com/abnormalTD/kopia)** — menej ako 1 MB namiesto 158 MB, sťahuje originál bez prekódovania. Stiahni ju z [posledného vydania](https://github.com/abnormalTD/kopia/releases/latest).
+>
+> *This app has been superseded by [Kópia](https://github.com/abnormalTD/kopia).*
+
 A small personal Android app (built with [Kivy](https://kivy.org/) and [buildozer](https://buildozer.readthedocs.io/)) that downloads audio from YouTube as MP3 files, using [yt-dlp](https://github.com/yt-dlp/yt-dlp) and ffmpeg.
 
 ## Features
